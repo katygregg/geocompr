@@ -2,7 +2,7 @@
 
 ## Prerequisites {-}
 
-- This chapter requires the packages **sf**, **raster** and **tidyverse**: 
+- This chapter requires the following packages to be installed and loaded: 
 
 ```{r, message=FALSE}
 library(sf)
@@ -19,8 +19,7 @@ library(spData)
 ## Introduction
 
 Attribute data is non-spatial information associated with geographic (geometry) data.
-A bus stop provides a simple example.
-In a spatial vector object its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name.
+A bus stop provides a simple example: its position would typically be represented by latitude and longitude coordinates (geometry data), in addition to its name.
 The name is an *attribute* of the feature (to use Simple Features terminology) that bears no relation to its geometry.
 <!-- idea: add an example of a bus stop (or modify a previous example so it represents a bus stop) in the previous chapter  -->
 
@@ -32,12 +31,12 @@ To derive the corresponding coordinate, we have to move from the origin three ce
 The raster header gives the matrix a spatial dimension which we need when plotting the raster or when we want to combine two rasters, think, for instance, of adding the values of one raster to another (see also next chapter).
 <!-- should we somewhere add a table comparing advantages/disadvantages of using the vector or raster data model, would fit nicely into chapter 2 -->
 
-This chapter focuses on non-geographic operations on vector and raster data.
-For vector data, we will introduce subsetting, aggregating and joining attribute data in the next section.
-Note that the corresponding functions also have a geographic equivalent.
-Sometimes you can even use the same functions for attribute and spatial operations.
-This is the case for subsetting as base R's `[` and tidyverse's `filter()` let you also subset spatial data based on the spatial extent of another spatial object (see Chapter \@ref(spatial-operations)).
-Therefore the skills you learn here are cross-transferable which is why this chapter lays the foundation for the next (Chapter \@ref(spatial-operations)) which extends the methods presented here to the spatial world.
+The focus of this chapter is manipulating geographic objects based on attributes such as the name of a bus stop and elevation.
+For vector data this means operations such as subsetting and aggregation (see sections \@ref(vector-attribute-subsetting) and \@ref(vector-attribute-aggregation)).
+These non-spatial operations have spatial equivalents:
+the `[` operator in base R, for example, works equally for subsetting objects based on their attribute and spatial objects, as we will see in Chapter \@ref(spatial-operations).
+This is good news: skills developed here are cross-transferable, meaning that this chapter lays the foundation for Chapter \@ref(spatial-operations), which extends the methods presented here to the spatial world.
+Sections \@ref(vector-attribute-joining) and \@ref(vec-attr-creation) demonstrate how to join data onto simple feature objects using a shared ID and how to create new variables, respectively.
 
 Raster attribute data operations are covered in Section \@ref(manipulating-raster-objects), which covers creating continuous and categorical raster layers and extracting cell values from one layer and multiple layers (raster subsetting). 
 Section \@ref(summarizing-raster-objects) provides an overview of 'global' raster operations which can be used to characterize entire raster datasets.
@@ -292,10 +291,11 @@ There are additional advantages of pipes from a communication perspective: they 
 
 ### Vector attribute aggregation
 
-Aggregation operations summarize datasets by a grouping variables, which can be either another attribute column or a spatial object.
+Aggregation operations summarize datasets by a 'grouping variable' (typically an attribute column) or a spatial object.
 Imagine we would like to calculate the number of people per continent. 
-Fortunately, our `world` dataset has the necessary ingredients, with the `pop` column containing the population per country and the grouping variable `continent`.
-In base R this can be done with `aggregate()` as follows:
+The `world` dataset contains the necessary ingredients, with the `pop` column containing the population per country and the grouping variable `continent`.
+Aggregation in this context finding the `sum()` of country populations for each continent.
+In base R this is done with `aggregate()` as follows:
 
 ```{r, eval=FALSE}
 aggregate(pop ~ continent, FUN = sum, data = world, na.rm = TRUE)
@@ -532,7 +532,7 @@ world_unite = world %>%
   unite("con_reg", continent:region_un, sep = ":", remove = TRUE)
 ```
 
-The `separate()` function does the exact opposite of the `unite()` function, i.e. it splits one column into multiple columns using either a regular expression or character positions.
+The `separate()` function does the opposite of `unite()`: it splits one column into multiple columns using either a regular expression or character positions.
 
 ```{r, eval=FALSE}
 world_separate = world_unite %>% 
@@ -544,20 +544,23 @@ identical(world, world_separate)
 ```
 
 The two functions `rename()` and `set_names()` are useful for renaming columns.
-The first one, `rename()` replaces an old name with a new one.
-For example, to change a column name from `name_long` to `name`, we type:
+The first replaces an old name with a new one.
+The following command, for example, renames the lengthy `name_long` column to simply `name`:
 
 ```{r, eval=FALSE}
 world %>% 
   rename(name = name_long)
 ```
 
-`set_names()` changes all column names at once, which is why we only have to provide the new names in form of a vector: 
+`set_names()` changes all column names at once, and requires a character vector with a name matching each column.
+This is illustrated below, which outputs the same `world` object, but with very short names: 
+
+```{r, eval=FALSE, echo=FALSE}
+abbreviate(names(world), minlength = 1) %>% dput()
+```
 
 ```{r, eval=FALSE}
-new_names = c("ISO_A2", "Name", "Continent", "Region", "Subregion", 
-              "Country_type", "Area_in_km2", "Population", "Life_Expectancy",
-              "GDP_per_capita", "geom")
+new_names = c("i", "n", "c", "r", "s", "t", "a", "p", "l", "gP", "geom")
 world %>% 
   set_names(new_names)
 ```
